@@ -133,24 +133,38 @@ def main():
     is_sold_out = {
         "Platform": ["EventBrite", "Eventtim"],
         "Average Sold Out (%)": [5.506607929515418, 0.9],
+        'Online Events (%)': [24, None]
     }
     sold_out_df = pd.DataFrame(is_sold_out)
     st.subheader("Average Sold Out (%)")
     st.table(sold_out_df)
 
-    with st.echo():
-        filepath = "https://raw.githubusercontent.com/issamoxix/DemoEvents/refs/heads/main/data/EventBrite/DataFrame.csv"
-        # eventbrite_df["lat"] = eventbrite_df["primary_venue.address.latitude"]
-    # eventbrite_df["lon"] = eventbrite_df["primary_venue.address.longitude"]
-        m = leafmap.Map(center=[40, -100], zoom=4)
-        m.add_heatmap(
-            filepath,
-            latitude="primary_venue.address.latitude",
-            longitude="primary_venue.address.longitude",
-            value="average_ticket_price",
-            name="Heat map",
-            radius=20,
-        )
+    eventbrite_df.groupby("primary_venue.name").count()
+
+    st.subheader("Top 10 Venues with Most Events")
+    cols = st.columns(2)
+    
+    eventbrite_df["Venue"] = eventbrite_df["primary_venue.name"]
+    eventim_df["Venue"] = eventim_df["products0typeAttributes0liveEntertainment0location0name"]
+
+    with cols[0]:
+        st.html("<h5>EventBrite</h5>")
+        venue_counts= eventbrite_df.groupby("Venue").size()
+        sorted_vanues = venue_counts.sort_values(ascending=False)
+        top_10 = sorted_vanues.iloc[1:11]
+        top_10_df = top_10.reset_index(name='Count')
+        top_10_df.index += 1
+        st.table(top_10_df)
+    
+    with cols[1]:
+        st.html("<h5>Eventim</h5>")
+        _venue_counts= eventim_df.groupby("Venue").size()
+        _sorted_vanues = _venue_counts.sort_values(ascending=False)
+        _top_10 = _sorted_vanues.iloc[1:11]
+        _top_10_df = _top_10.reset_index(name='Count')
+        _top_10_df.index += 1
+        st.table(_top_10_df)
+
 
 
 if __name__ == "__main__":
