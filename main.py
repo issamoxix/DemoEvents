@@ -50,7 +50,7 @@ def main():
 
     df = pd.concat([eventbrite_df, eventim_df])
 
-    eventim_df = eventim_df[(eventim_df["lat"] < 52.5) & (eventim_df["lon"] < 13.5)]
+    eventim_df = eventim_df[(eventim_df["lat"] < 53) & (eventim_df["lon"] < 13.5)]
     df = df[(df["lon"] < 13.5) & (df["lat"] < 52.5)]
     # df[
     #     (df["lat"] >= lat_min)
@@ -177,7 +177,15 @@ def main():
 
     with cols[0]:
         st.html("<h5 style='color:#cf663f;'>EventBrite</h5>")
-        venue_counts = eventbrite_df.groupby("Venue").size()
+        if tag != "All":
+            venue_counts = (
+                df[(df["source"] == "EventBrite") & (df["unified_tags"] == tag)]
+                .groupby("primary_venue.name")
+                .size()
+            )
+            venue_counts.index.name = "Venue"
+        else:
+            venue_counts = eventbrite_df.groupby("Venue").size()
         sorted_vanues = venue_counts.sort_values(ascending=False)
         top_10 = sorted_vanues.iloc[1:11]
         top_10_df = top_10.reset_index(name="Count")
@@ -186,9 +194,18 @@ def main():
 
     with cols[1]:
         st.html("<h5 style='color:#232864;'>Eventim</h5>")
-        _venue_counts = eventim_df.groupby("Venue").size()
+        if tag != "All":
+            _venue_counts = (
+                df[(df["source"] == "Eventim") & (df["unified_tags"] == tag)]
+                .groupby("products0typeAttributes0liveEntertainment0location0name")
+                .size()
+            )
+            _venue_counts.index.name = "Venue"
+        else:
+            _venue_counts = eventim_df.groupby("Venue").size()
         _sorted_vanues = _venue_counts.sort_values(ascending=False)
         _top_10 = _sorted_vanues.iloc[1:11]
+        print(_top_10, _venue_counts)
         _top_10_df = _top_10.reset_index(name="Count")
         _top_10_df.index += 1
         st.table(_top_10_df)
