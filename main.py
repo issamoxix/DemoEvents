@@ -3,6 +3,7 @@ import json
 import pandas as pd
 import matplotlib.pyplot as plt
 import seaborn as sns
+import leafmap.foliumap as leafmap
 
 from constants.mapping import mapping
 
@@ -21,8 +22,8 @@ def unify_tags(row, column1, column2, mapping):
 
 
 def main():
-    st.title("Events in Berlin")
-    st.text("Visualizing Events in Berlin")
+    st.header("Events in Berlin", divider="gray")
+    st.subheader("Visualizing Events in Berlin")
 
     st.markdown(
         """
@@ -73,9 +74,11 @@ def main():
 
     roi_df = dataframes[mapstyle]
     if tag != "All":
-        print(tag)
-        print(roi_df.head(5))
         roi_df = roi_df[roi_df["unified_tags"] == tag]
+    # if mapstyle == "EventBrite":
+        # roi_df = roi_df[roi_df["ticket_availability.maximum_ticket_price.currency"] == "EUR"]
+        # st.map(roi_df, color="color", size="average_ticket_price", hex=)
+    # else:
     st.map(roi_df, color="color", size=20)
 
     frequent_source = {
@@ -89,7 +92,7 @@ def main():
         format_func=str.capitalize,
     )
 
-    st.title("Categories Frequency")
+    st.subheader("Categories Frequency")
     st.markdown(
         """
         This chart shows the frequency of categories in the dataset.
@@ -119,7 +122,7 @@ def main():
     plt.xticks(rotation=45, ha="right")
 
     plt.tight_layout()
-    st.title("Duration Frequency")
+    st.subheader("Duration Frequency")
     st.markdown(
         """
         This chart shows the average duration of events based on the selected source.
@@ -127,6 +130,27 @@ def main():
     )
     st.pyplot(duration_fig)
 
+    is_sold_out = {
+        "Platform": ["EventBrite", "Eventtim"],
+        "Average Sold Out (%)": [5.506607929515418, 0.9],
+    }
+    sold_out_df = pd.DataFrame(is_sold_out)
+    st.subheader("Average Sold Out (%)")
+    st.table(sold_out_df)
+
+    with st.echo():
+        filepath = "https://raw.githubusercontent.com/issamoxix/DemoEvents/refs/heads/main/data/EventBrite/DataFrame.csv"
+        # eventbrite_df["lat"] = eventbrite_df["primary_venue.address.latitude"]
+    # eventbrite_df["lon"] = eventbrite_df["primary_venue.address.longitude"]
+        m = leafmap.Map(center=[40, -100], zoom=4)
+        m.add_heatmap(
+            filepath,
+            latitude="primary_venue.address.latitude",
+            longitude="primary_venue.address.longitude",
+            value="average_ticket_price",
+            name="Heat map",
+            radius=20,
+        )
 
 
 if __name__ == "__main__":
